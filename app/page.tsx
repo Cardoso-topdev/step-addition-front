@@ -1,5 +1,6 @@
 "use client";
 
+import { getGeneratedSteps, saveGeneratedSteps } from "@/utils";
 import { useCallback, useState } from "react";
 
 type FormValues = {
@@ -16,7 +17,18 @@ export default function Home() {
   // Handle form submission
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("Form Submitted!", formValues);
+    getGeneratedSteps({
+      num1: formValues.firstNumber,
+      num2: formValues.secondNumber
+    }).then(result => {
+      let resultData = result.data
+      for (const key in resultData) {
+        if (resultData.hasOwnProperty(key)) {
+          resultData[key] = JSON.stringify(resultData[key])
+        }
+      }
+      setStepsResult(JSON.stringify(resultData, null, 2).replace(/\\/g, ''))
+    })
   };
 
   // Handle input changes
@@ -25,14 +37,17 @@ export default function Home() {
     setFormValues({ ...formValues, [name]: value });
   };
 
-  // console.log('===> firstNumError', firstNumError)
   const onSaveResult = useCallback(() => {
-
+    saveGeneratedSteps({
+      num1: formValues.firstNumber,
+      num2: formValues.secondNumber,
+      steps: stepsResult
+    })
   }, [stepsResult])
 
   return (
     <main>
-      <form onSubmit={handleSubmit} className="max-w-sm mx-auto mt-[100px]">
+      <form onSubmit={handleSubmit} className="max-w-[600px] mx-auto mt-[100px]">
         <div className="mb-4 flex gap-[10px] items-center">
           <label
             htmlFor="firstNumber"
@@ -78,7 +93,7 @@ export default function Home() {
         <textarea
           readOnly
           className="resize-none w-full border rounded-md p-2 mt-10 bg-gray-100"
-          rows={5}
+          rows={10}
           value={stepsResult}
         />
         <div className="flex justify-end">
